@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -6,6 +7,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from utils.database import connect_db
 from routes.auth import router as auth_router
+from routes.scripthub import router as scripthub_router
 import os
 
 app = FastAPI()
@@ -14,9 +16,8 @@ app = FastAPI()
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-app.add_middleware(SlowAPIMiddleware)
 
-# CORS middleware
+# CORS middleware (add before SlowAPI middleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,10 +26,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add SlowAPI middleware after CORS
+app.add_middleware(SlowAPIMiddleware)
+
 # Include routers
 app.include_router(auth_router, prefix="/api/v1/users")
-
-from routes.scripthub import router as scripthub_router
 app.include_router(scripthub_router, prefix="/api/v1")
 
 @app.exception_handler(404)
@@ -50,5 +52,5 @@ async def read_root():
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.getenv("PORT", 5000))
+    port = int(os.getenv("PORT", 8000))  # Changed default port to 8000
     uvicorn.run(app, host="0.0.0.0", port=port)
