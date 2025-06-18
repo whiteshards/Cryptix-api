@@ -41,6 +41,10 @@ async def internal_error_handler(request, exc):
 async def startup_event():
     await connect_db()
 
+@app.get("/")
+async def read_root():
+    return {"message": "Welcome to the Cryptix API"}
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 5000))
