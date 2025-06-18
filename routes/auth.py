@@ -153,11 +153,3 @@ async def get_profile(user = Depends(authenticate_token)):
         success=True,
         customer=format_user_response(user)
     )
-
-@router.get("/protected", response_model=ProtectedResponse)
-async def protected_route(user = Depends(authenticate_token)):
-    return ProtectedResponse(
-        success=True,
-        message="This is a protected route",
-        customer=user["username"]
-    )
