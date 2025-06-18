@@ -8,7 +8,7 @@ from utils.scripthub import (
     create_scripthub_structure, 
     validate_scripthub_limits
 )
-from models.user import ScripthubCreate, ScripthubResponse, ScripthubListResponse, ScripthubInfo, ScripthubLimits
+from models.user import ScripthubCreate, ScripthubResponse
 from routes.auth import authenticate_token
 
 # Initialize router
@@ -72,7 +72,7 @@ async def create_scripthub(
             detail="Failed to create scripthub"
         )
 
-@router.get("/scripthubs", response_model=ScripthubListResponse)
+@router.get("/scripthubs")
 @limiter.limit("20/5minutes")
 async def get_scripthubs(request: Request, user = Depends(authenticate_token)):
     """Get all scripthubs for authenticated user"""
@@ -81,31 +81,34 @@ async def get_scripthubs(request: Request, user = Depends(authenticate_token)):
         customer_data = await get_customer_data(user_id)
         
         if not customer_data:
-            return ScripthubListResponse(
-                success=True,
-                scripthubs=[],
-                limits=ScripthubLimits(max_scripthubs=1, max_keys=200)
-            )
+            return {
+                "success": True,
+                "scripthubs": [],
+                "limits": {
+                    "max_scripthubs": 1,
+                    "max_keys": 200
+                }
+            }
         
         # Extract scripthubs (exclude system fields)
         scripthubs = []
         for key, value in customer_data.items():
             if key not in ["max_scripthubs", "max_keys"]:
-                scripthubs.append(ScripthubInfo(
-                    name=key,
-                    token=value["token"],
-                    max_keys=value["max_keys"],
-                    current_keys=len(value["keys"])
-                ))
+                scripthubs.append({
+                    "name": key,
+                    "token": value["token"],
+                    "max_keys": value["max_keys"],
+                    "current_keys": len(value["keys"])
+                })
         
-        return ScripthubListResponse(
-            success=True,
-            scripthubs=scripthubs,
-            limits=ScripthubLimits(
-                max_scripthubs=customer_data.get("max_scripthubs", 1),
-                max_keys=customer_data.get("max_keys", 200)
-            )
-        )
+        return {
+            "success": True,
+            "scripthubs": scripthubs,
+            "limits": {
+                "max_scripthubs": customer_data.get("max_scripthubs", 1),
+                "max_keys": customer_data.get("max_keys", 200)
+            }
+        }
         
     except Exception as error:
         print(f"Get scripthubs error: {error}")
