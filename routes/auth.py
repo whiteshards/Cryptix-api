@@ -4,43 +4,15 @@ import jwt
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, Field
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from utils.database import find_user_by_username, find_user_by_id, create_user, verify_password
+from models.user import UserCreate, UserLogin, UserResponse, TokenResponse, ProfileResponse, ProtectedResponse
 
 # Initialize router and security
 router = APIRouter()
 security = HTTPBearer()
 limiter = Limiter(key_func=get_remote_address)
-
-# Pydantic models
-class UserCreate(BaseModel):
-    username: str = Field(..., min_length=3, max_length=30, regex=r'^[a-zA-Z0-9_]+$')
-    password: str = Field(..., min_length=8)
-
-class UserLogin(BaseModel):
-    username: str
-    password: str
-
-class UserResponse(BaseModel):
-    id: str
-    username: str
-    createdAt: datetime
-
-class TokenResponse(BaseModel):
-    success: bool
-    token: str
-    customer: UserResponse
-
-class ProfileResponse(BaseModel):
-    success: bool
-    customer: UserResponse
-
-class ProtectedResponse(BaseModel):
-    success: bool
-    message: str
-    customer: str
 
 # Helper functions
 def generate_token(user_id: str) -> str:
