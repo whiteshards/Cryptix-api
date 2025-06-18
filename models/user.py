@@ -43,3 +43,18 @@ class ScripthubResponse(BaseModel):
     success: bool
     message: str
     scripthub: dict
+
+class ScripthubInfo(BaseModel):
+    name: str
+    token: str
+    max_keys: int
+    current_keys: int
+
+class ScripthubLimits(BaseModel):
+    max_scripthubs: int
+    max_keys: int
+
+class ScripthubListResponse(BaseModel):
+    success: bool
+    scripthubs: list[ScripthubInfo]
+    limits: ScripthubLimits
