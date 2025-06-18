@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, HTTPException, Depends, status, Request
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -24,12 +23,12 @@ async def create_scripthub(
 ):
     try:
         user_id = str(user["_id"])
-        
+
         # Get existing customer data or create default
         customer_data = await get_customer_data(user_id)
         if not customer_data:
             customer_data = create_default_customer_data()
-        
+
         # Validate scripthub limits and name
         is_valid, error_message = validate_scripthub_limits(customer_data, scripthub_data.name)
         if not is_valid:
@@ -37,14 +36,14 @@ async def create_scripthub(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=error_message
             )
-        
+
         # Create new scripthub structure
         max_keys = customer_data.get("max_keys", 200)
         new_scripthub = create_scripthub_structure(scripthub_data.name, max_keys, scripthub_data.key_timelimit)
-        
+
         # Update customer data with new scripthub
         customer_data.update(new_scripthub)
-        
+
         # Save to database
         update_success = await update_customer_data(user_id, customer_data)
         if not update_success:
@@ -52,7 +51,7 @@ async def create_scripthub(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to create scripthub"
             )
-        
+
         return ScripthubResponse(
             success=True,
             message="Scripthub created successfully",
@@ -63,7 +62,7 @@ async def create_scripthub(
                 "key_timelimit": new_scripthub[scripthub_data.name]["key_timelimit"]
             }
         )
-        
+
     except HTTPException:
         raise
     except Exception as error:
@@ -80,14 +79,14 @@ async def get_scripthubs(request: Request, user = Depends(authenticate_token)):
     try:
         user_id = str(user["_id"])
         customer_data = await get_customer_data(user_id)
-        
+
         if not customer_data:
             return ScripthubListResponse(
                 success=True,
                 scripthubs=[],
                 limits=ScripthubLimits(max_scripthubs=1, max_keys=200)
             )
-        
+
         # Extract scripthubs (exclude system fields)
         scripthubs = []
         for key, value in customer_data.items():
@@ -99,7 +98,7 @@ async def get_scripthubs(request: Request, user = Depends(authenticate_token)):
                     current_keys=len(value["keys"]),
                     key_timelimit=value.get("key_timelimit", 16)
                 ))
-        
+
         return ScripthubListResponse(
             success=True,
             scripthubs=scripthubs,
@@ -108,7 +107,7 @@ async def get_scripthubs(request: Request, user = Depends(authenticate_token)):
                 max_keys=customer_data.get("max_keys", 200)
             )
         )
-        
+
     except Exception as error:
         print(f"Get scripthubs error: {error}")
         raise HTTPException(
@@ -127,16 +126,17 @@ async def delete_scripthub(
     try:
         user_id = str(user["_id"])
         customer_data = await get_customer_data(user_id)
-        
-        if not customer_data or scripthub_name not in customer_data:
+
+        # Check if scripthub exists (exclude system fields)
+        if not customer_data or scripthub_name not in customer_data or scripthub_name in ["max_scripthubs", "max_keys"]:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Scripthub not found"
+                detail=f"Scripthub '{scripthub_name}' not found"
             )
-        
+
         # Remove the scripthub
         del customer_data[scripthub_name]
-        
+
         # Save to database
         update_success = await update_customer_data(user_id, customer_data)
         if not update_success:
@@ -144,9 +144,9 @@ async def delete_scripthub(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to delete scripthub"
             )
-        
+
         return {"success": True, "message": "Scripthub deleted successfully"}
-        
+
     except HTTPException:
         raise
     except Exception as error:
@@ -168,31 +168,32 @@ async def update_scripthub(
     try:
         user_id = str(user["_id"])
         customer_data = await get_customer_data(user_id)
-        
-        if not customer_data or scripthub_name not in customer_data:
+
+        # Check if scripthub exists (exclude system fields)
+        if not customer_data or scripthub_name not in customer_data or scripthub_name in ["max_scripthubs", "max_keys"]:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Scripthub not found"
+                detail=f"Scripthub '{scripthub_name}' not found"
             )
-        
+
         # Check if new name already exists (only if it's different from current name)
         if update_data.new_name != scripthub_name and update_data.new_name in customer_data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Scripthub with new name already exists"
             )
-        
+
         # Get existing scripthub data
         scripthub_data = customer_data[scripthub_name]
-        
+
         # Update the key_timelimit
         scripthub_data["key_timelimit"] = update_data.key_timelimit
-        
+
         # If name is changing, create new entry and delete old one
         if update_data.new_name != scripthub_name:
             customer_data[update_data.new_name] = scripthub_data
             del customer_data[scripthub_name]
-        
+
         # Save to database
         update_success = await update_customer_data(user_id, customer_data)
         if not update_success:
@@ -200,7 +201,7 @@ async def update_scripthub(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to update scripthub"
             )
-        
+
         return {
             "success": True, 
             "message": "Scripthub updated successfully",
@@ -211,7 +212,7 @@ async def update_scripthub(
                 "key_timelimit": scripthub_data["key_timelimit"]
             }
         }
-        
+
     except HTTPException:
         raise
     except Exception as error:
