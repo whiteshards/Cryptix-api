@@ -1,15 +1,15 @@
-entrypoint = "index.js"
-modules = ["nodejs-22", "python-3.11"]
+modules = ["python-3.12"]
 hidden = [".config", "package-lock.json"]
+run = "uvicorn main:app --host 0.0.0.0 --port 3000"
 
 [gitHubImport]
 requiredFiles = [".replit", "replit.nix", "package.json", "package-lock.json"]
 
 [nix]
-channel = "stable-24_11"
+channel = "stable-24_05"
 
 [deployment]
-run = ["sh", "-c", "python main.py"]
+run = ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port 3000"]
 deploymentTarget = "autoscale"
 ignorePorts = false
 
