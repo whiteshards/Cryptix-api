@@ -40,7 +40,7 @@ async def create_scripthub(
         
         # Create new scripthub structure
         max_keys = customer_data.get("max_keys", 200)
-        new_scripthub = create_scripthub_structure(scripthub_data.name, max_keys)
+        new_scripthub = create_scripthub_structure(scripthub_data.name, max_keys, scripthub_data.key_timelimit)
         
         # Update customer data with new scripthub
         customer_data.update(new_scripthub)
@@ -59,7 +59,8 @@ async def create_scripthub(
             scripthub={
                 "name": scripthub_data.name,
                 "token": new_scripthub[scripthub_data.name]["token"],
-                "max_keys": new_scripthub[scripthub_data.name]["max_keys"]
+                "max_keys": new_scripthub[scripthub_data.name]["max_keys"],
+                "key_timelimit": new_scripthub[scripthub_data.name]["key_timelimit"]
             }
         )
         
@@ -95,7 +96,8 @@ async def get_scripthubs(request: Request, user = Depends(authenticate_token)):
                     name=key,
                     token=value["token"],
                     max_keys=value["max_keys"],
-                    current_keys=len(value["keys"])
+                    current_keys=len(value["keys"]),
+                    key_timelimit=value.get("key_timelimit", 16)
                 ))
         
         return ScripthubListResponse(

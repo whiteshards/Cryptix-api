@@ -35,6 +35,7 @@ class ProtectedResponse(BaseModel):
 
 class ScripthubCreate(BaseModel):
     name: str = Field(..., min_length=3, max_length=50, pattern=r'^[a-zA-Z0-9_-]+$')
+    key_timelimit: int = Field(default=16, ge=1, le=8760)  # 1 hour to 1 year
     
     class Config:
         str_strip_whitespace = True
@@ -49,6 +50,7 @@ class ScripthubInfo(BaseModel):
     token: str
     max_keys: int
     current_keys: int
+    key_timelimit: int
 
 class ScripthubLimits(BaseModel):
     max_scripthubs: int
