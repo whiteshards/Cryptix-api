@@ -8,7 +8,7 @@ from utils.scripthub import (
     create_scripthub_structure, 
     validate_scripthub_limits
 )
-from models.user import ScripthubCreate, ScripthubResponse, ScripthubListResponse, ScripthubInfo, ScripthubLimits
+from models.user import ScripthubCreate, ScripthubResponse, ScripthubListResponse, ScripthubInfo, ScripthubLimits, ScripthubUpdate
 from routes.auth import authenticate_token
 
 # Initialize router
@@ -114,4 +114,109 @@ async def get_scripthubs(request: Request, user = Depends(authenticate_token)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve scripthubs"
+        )
+
+@router.delete("/scripthub/{scripthub_name}")
+@limiter.limit("10/5minutes")
+async def delete_scripthub(
+    request: Request, 
+    scripthub_name: str,
+    user = Depends(authenticate_token)
+):
+    """Delete a scripthub"""
+    try:
+        user_id = str(user["_id"])
+        customer_data = await get_customer_data(user_id)
+        
+        if not customer_data or scripthub_name not in customer_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Scripthub not found"
+            )
+        
+        # Remove the scripthub
+        del customer_data[scripthub_name]
+        
+        # Save to database
+        update_success = await update_customer_data(user_id, customer_data)
+        if not update_success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete scripthub"
+            )
+        
+        return {"success": True, "message": "Scripthub deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as error:
+        print(f"Delete scripthub error: {error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete scripthub"
+        )
+
+@router.put("/scripthub/{scripthub_name}")
+@limiter.limit("10/5minutes")
+async def update_scripthub(
+    request: Request, 
+    scripthub_name: str,
+    update_data: ScripthubUpdate,
+    user = Depends(authenticate_token)
+):
+    """Update scripthub name and time limit"""
+    try:
+        user_id = str(user["_id"])
+        customer_data = await get_customer_data(user_id)
+        
+        if not customer_data or scripthub_name not in customer_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Scripthub not found"
+            )
+        
+        # Check if new name already exists (only if it's different from current name)
+        if update_data.new_name != scripthub_name and update_data.new_name in customer_data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Scripthub with new name already exists"
+            )
+        
+        # Get existing scripthub data
+        scripthub_data = customer_data[scripthub_name]
+        
+        # Update the key_timelimit
+        scripthub_data["key_timelimit"] = update_data.key_timelimit
+        
+        # If name is changing, create new entry and delete old one
+        if update_data.new_name != scripthub_name:
+            customer_data[update_data.new_name] = scripthub_data
+            del customer_data[scripthub_name]
+        
+        # Save to database
+        update_success = await update_customer_data(user_id, customer_data)
+        if not update_success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update scripthub"
+            )
+        
+        return {
+            "success": True, 
+            "message": "Scripthub updated successfully",
+            "scripthub": {
+                "name": update_data.new_name,
+                "token": scripthub_data["token"],
+                "max_keys": scripthub_data["max_keys"],
+                "key_timelimit": scripthub_data["key_timelimit"]
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as error:
+        print(f"Update scripthub error: {error}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update scripthub"
         )

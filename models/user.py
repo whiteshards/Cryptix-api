@@ -40,6 +40,13 @@ class ScripthubCreate(BaseModel):
     class Config:
         str_strip_whitespace = True
 
+class ScripthubUpdate(BaseModel):
+    new_name: str = Field(..., min_length=3, max_length=50, pattern=r'^[a-zA-Z0-9_-]+$')
+    key_timelimit: int = Field(..., ge=1, le=8760)  # 1 hour to 1 year
+    
+    class Config:
+        str_strip_whitespace = True
+
 class ScripthubResponse(BaseModel):
     success: bool
     message: str
