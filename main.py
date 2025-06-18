@@ -28,6 +28,9 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router, prefix="/api/v1/users")
 
+from routes.scripthub import router as scripthub_router
+app.include_router(scripthub_router, prefix="/api/v1")
+
 @app.exception_handler(404)
 async def not_found_handler(request, exc):
     return {"error": "Route not found"}

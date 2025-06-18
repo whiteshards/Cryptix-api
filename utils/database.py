@@ -43,7 +43,11 @@ async def create_user(username: str, password: str):
     user_doc = {
         "username": username,
         "password": hashed_password,
-        "createdAt": datetime.utcnow()
+        "createdAt": datetime.utcnow(),
+        "data": {
+            "max_scripthubs": 1,
+            "max_keys": 200
+        }
     }
     
     result = await db.customers.insert_one(user_doc)
@@ -52,3 +56,25 @@ async def create_user(username: str, password: str):
 
 def verify_password(password: str, hashed_password: bytes) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
+
+async def update_customer_data(user_id: str, data_update: dict):
+    """Update customer data field"""
+    try:
+        result = await db.customers.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"data": data_update}}
+        )
+        return result.modified_count > 0
+    except Exception:
+        return False
+
+async def get_customer_data(user_id: str):
+    """Get customer data field"""
+    try:
+        user = await db.customers.find_one(
+            {"_id": ObjectId(user_id)},
+            {"data": 1}
+        )
+        return user.get("data", {}) if user else {}
+    except Exception:
+        return {}

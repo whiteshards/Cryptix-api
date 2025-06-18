@@ -32,3 +32,14 @@ class ProtectedResponse(BaseModel):
     success: bool
     message: str
     customer: str
+
+class ScripthubCreate(BaseModel):
+    name: str = Field(..., min_length=3, max_length=50, pattern=r'^[a-zA-Z0-9_-]+$')
+    
+    class Config:
+        str_strip_whitespace = True
+
+class ScripthubResponse(BaseModel):
+    success: bool
+    message: str
+    scripthub: dict
