@@ -76,7 +76,7 @@ def format_user_response(user) -> UserResponse:
 from pydantic import ValidationError
 
 @router.post("/register", response_model=TokenResponse)
-@limiter.limit("5/15minutes")
+@limiter.limit("5/15minutes", description="Registration attempts")
 async def register(request: Request, user_data: UserCreate):
     try:
         # Check if user already exists
@@ -112,7 +112,7 @@ async def register(request: Request, user_data: UserCreate):
         )
 
 @router.post("/login", response_model=TokenResponse)
-@limiter.limit("5/15minutes")
+@limiter.limit("5/15minutes", description="Login attempts")
 async def login(request: Request, user_data: UserLogin):
     try:
         # Find user
