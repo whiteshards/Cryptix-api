@@ -73,6 +73,8 @@ def format_user_response(user) -> UserResponse:
     )
 
 # Routes
+from pydantic import ValidationError
+
 @router.post("/register", response_model=TokenResponse)
 @limiter.limit("5/15minutes")
 async def register(request: Request, user_data: UserCreate):
@@ -95,9 +97,15 @@ async def register(request: Request, user_data: UserCreate):
             customer=format_user_response(user)
         )
         
+    except ValidationError as ve:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(ve)
+        )
     except HTTPException:
         raise
     except Exception as error:
+        print(f"Registration error: {error}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Registration failed"
