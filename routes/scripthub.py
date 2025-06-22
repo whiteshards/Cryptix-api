@@ -255,7 +255,7 @@ async def update_scripthub(
             scripthub_data["checkpoints"] = update_data.checkpoints
 
         # If name is changing, create new entry and delete old one
-        if update_data.new_name is not None and update_data.new_name != scripthub_name:
+        if update_data.new_name and update_data.new_name != scripthub_name:
             customer_data[update_data.new_name] = scripthub_data
             del customer_data[scripthub_name]
             scripthub_name = update_data.new_name
