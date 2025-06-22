@@ -59,7 +59,11 @@ async def create_scripthub(
                 "name": scripthub_data.name,
                 "token": new_scripthub[scripthub_data.name]["token"],
                 "max_keys": new_scripthub[scripthub_data.name]["max_keys"],
-                "key_timelimit": new_scripthub[scripthub_data.name]["key_timelimit"]
+                "key_timelimit": new_scripthub[scripthub_data.name]["key_timelimit"],
+                "maxCheckpoints": new_scripthub[scripthub_data.name]["maxCheckpoints"],
+                "checkpoints": new_scripthub[scripthub_data.name]["checkpoints"],
+                "cryptixCheckpoint": new_scripthub[scripthub_data.name]["cryptixCheckpoint"],
+                "checkpointData": new_scripthub[scripthub_data.name]["checkpointData"]
             }
         )
 
@@ -96,7 +100,15 @@ async def get_scripthubs(request: Request, user = Depends(authenticate_token)):
                     token=value["token"],
                     max_keys=value["max_keys"],
                     current_keys=len(value["keys"]),
-                    key_timelimit=value.get("key_timelimit", 16)
+                    key_timelimit=value.get("key_timelimit", 16),
+                    maxCheckpoints=value.get("maxCheckpoints", 10),
+                    checkpoints=value.get("checkpoints", 1),
+                    cryptixCheckpoint=value.get("cryptixCheckpoint", 1),
+                    checkpointData=value.get("checkpointData", {
+                        "linkvertise": None,
+                        "rinku": None,
+                        "lootlabs": None
+                    })
                 ))
 
         return ScripthubListResponse(
@@ -186,13 +198,23 @@ async def update_scripthub(
         # Get existing scripthub data
         scripthub_data = customer_data[scripthub_name]
 
-        # Update the key_timelimit
-        scripthub_data["key_timelimit"] = update_data.key_timelimit
+        # Update only provided fields
+        if update_data.key_timelimit is not None:
+            scripthub_data["key_timelimit"] = update_data.key_timelimit
+        if update_data.maxCheckpoints is not None:
+            scripthub_data["maxCheckpoints"] = update_data.maxCheckpoints
+        if update_data.checkpoints is not None:
+            scripthub_data["checkpoints"] = update_data.checkpoints
+        if update_data.cryptixCheckpoint is not None:
+            scripthub_data["cryptixCheckpoint"] = update_data.cryptixCheckpoint
+        if update_data.checkpointData is not None:
+            scripthub_data["checkpointData"] = update_data.checkpointData
 
         # If name is changing, create new entry and delete old one
-        if update_data.new_name != scripthub_name:
+        if update_data.new_name is not None and update_data.new_name != scripthub_name:
             customer_data[update_data.new_name] = scripthub_data
             del customer_data[scripthub_name]
+            scripthub_name = update_data.new_name
 
         # Save to database
         update_success = await update_customer_data(user_id, customer_data)
@@ -206,10 +228,18 @@ async def update_scripthub(
             "success": True, 
             "message": "Scripthub updated successfully",
             "scripthub": {
-                "name": update_data.new_name,
+                "name": scripthub_name,
                 "token": scripthub_data["token"],
                 "max_keys": scripthub_data["max_keys"],
-                "key_timelimit": scripthub_data["key_timelimit"]
+                "key_timelimit": scripthub_data["key_timelimit"],
+                "maxCheckpoints": scripthub_data.get("maxCheckpoints", 10),
+                "checkpoints": scripthub_data.get("checkpoints", 1),
+                "cryptixCheckpoint": scripthub_data.get("cryptixCheckpoint", 1),
+                "checkpointData": scripthub_data.get("checkpointData", {
+                    "linkvertise": None,
+                    "rinku": None,
+                    "lootlabs": None
+                })
             }
         }
 

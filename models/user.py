@@ -41,8 +41,12 @@ class ScripthubCreate(BaseModel):
         str_strip_whitespace = True
 
 class ScripthubUpdate(BaseModel):
-    new_name: str = Field(..., min_length=3, max_length=50, pattern=r'^[a-zA-Z0-9_-]+$')
-    key_timelimit: int = Field(..., ge=1, le=8760)  # 1 hour to 1 year
+    new_name: str = Field(None, min_length=3, max_length=50, pattern=r'^[a-zA-Z0-9_-]+$')
+    key_timelimit: int = Field(None, ge=1, le=8760)  # 1 hour to 1 year
+    maxCheckpoints: int = Field(None, ge=1, le=100)
+    checkpoints: int = Field(None, ge=1)
+    cryptixCheckpoint: int = Field(None, ge=1)
+    checkpointData: dict = Field(None)
     
     class Config:
         str_strip_whitespace = True
@@ -58,6 +62,10 @@ class ScripthubInfo(BaseModel):
     max_keys: int
     current_keys: int
     key_timelimit: int
+    maxCheckpoints: int
+    checkpoints: int
+    cryptixCheckpoint: int
+    checkpointData: dict
 
 class ScripthubLimits(BaseModel):
     max_scripthubs: int
