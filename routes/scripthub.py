@@ -39,7 +39,7 @@ async def create_scripthub(
 
         # Create new scripthub structure
         max_keys = customer_data.get("max_keys", 200)
-        new_scripthub = create_scripthub_structure(scripthub_data.name, max_keys, scripthub_data.key_timelimit)
+        new_scripthub = create_scripthub_structure(scripthub_data.name, max_keys, 16, scripthub_data.checkpoints)
 
         # Update customer data with new scripthub
         customer_data.update(new_scripthub)
@@ -201,14 +201,8 @@ async def update_scripthub(
         # Update only provided fields
         if update_data.key_timelimit is not None:
             scripthub_data["key_timelimit"] = update_data.key_timelimit
-        if update_data.maxCheckpoints is not None:
-            scripthub_data["maxCheckpoints"] = update_data.maxCheckpoints
         if update_data.checkpoints is not None:
             scripthub_data["checkpoints"] = update_data.checkpoints
-        if update_data.cryptixCheckpoint is not None:
-            scripthub_data["cryptixCheckpoint"] = update_data.cryptixCheckpoint
-        if update_data.checkpointData is not None:
-            scripthub_data["checkpointData"] = update_data.checkpointData
 
         # If name is changing, create new entry and delete old one
         if update_data.new_name is not None and update_data.new_name != scripthub_name:

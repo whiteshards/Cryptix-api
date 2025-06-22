@@ -15,7 +15,7 @@ def create_default_customer_data() -> Dict[str, Any]:
         "max_keys": 200
     }
 
-def create_scripthub_structure(name: str, max_keys: int = 200, key_timelimit: int = 16) -> Dict[str, Any]:
+def create_scripthub_structure(name: str, max_keys: int = 200, key_timelimit: int = 16, checkpoints: int = 1) -> Dict[str, Any]:
     """Create a new scripthub structure"""
     return {
         name: {
@@ -23,7 +23,7 @@ def create_scripthub_structure(name: str, max_keys: int = 200, key_timelimit: in
             "max_keys": max_keys,
             "key_timelimit": key_timelimit,
             "maxCheckpoints": 10,
-            "checkpoints": 1,
+            "checkpoints": checkpoints,
             "cryptixCheckpoint": 1,
             "checkpointData": {
                 "linkvertise": None,
