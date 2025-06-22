@@ -259,9 +259,10 @@ async def update_scripthub(
                 detail="No changes detected. The provided values are the same as current values."
             )
 
-        # Update only provided fields
+        # Update fields in scripthub_data first
         if update_data.key_timelimit is not None:
             scripthub_data["key_timelimit"] = update_data.key_timelimit
+            
         if update_data.checkpoints is not None:
             # Validate checkpoints don't exceed maxCheckpoints
             cryptix_checkpoint = scripthub_data.get("cryptixCheckpoint", 1)
@@ -276,8 +277,9 @@ async def update_scripthub(
             
             scripthub_data["checkpoints"] = update_data.checkpoints
 
-        # If name is changing, create new entry and delete old one
+        # Handle name change after updating other fields
         if update_data.new_name and update_data.new_name != scripthub_name:
+            # Create new entry with updated data and delete old one
             customer_data[update_data.new_name] = scripthub_data
             del customer_data[scripthub_name]
             scripthub_name = update_data.new_name
