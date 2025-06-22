@@ -37,6 +37,14 @@ async def create_scripthub(
                 detail=error_message
             )
 
+        # Validate checkpoints don't exceed maxCheckpoints (checkpoints + cryptixCheckpoint = 1)
+        total_checkpoints = scripthub_data.checkpoints + 1  # cryptixCheckpoint is always 1
+        if total_checkpoints > 10:  # maxCheckpoints is 10
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Total checkpoints ({total_checkpoints}) cannot exceed maxCheckpoints (10)"
+            )
+
         # Create new scripthub structure
         max_keys = customer_data.get("max_keys", 200)
         new_scripthub = create_scripthub_structure(scripthub_data.name, max_keys, 16, scripthub_data.checkpoints)
@@ -202,6 +210,17 @@ async def update_scripthub(
         if update_data.key_timelimit is not None:
             scripthub_data["key_timelimit"] = update_data.key_timelimit
         if update_data.checkpoints is not None:
+            # Validate checkpoints don't exceed maxCheckpoints
+            cryptix_checkpoint = scripthub_data.get("cryptixCheckpoint", 1)
+            max_checkpoints = scripthub_data.get("maxCheckpoints", 10)
+            total_checkpoints = update_data.checkpoints + cryptix_checkpoint
+            
+            if total_checkpoints > max_checkpoints:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Total checkpoints ({total_checkpoints}) cannot exceed maxCheckpoints ({max_checkpoints})"
+                )
+            
             scripthub_data["checkpoints"] = update_data.checkpoints
 
         # If name is changing, create new entry and delete old one
