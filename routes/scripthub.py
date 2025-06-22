@@ -237,6 +237,28 @@ async def update_scripthub(
         # Get existing scripthub data
         scripthub_data = customer_data[scripthub_name]
 
+        # Check if any values are actually changing
+        changes_made = False
+        
+        # Check if name is changing
+        if update_data.new_name and update_data.new_name != scripthub_name:
+            changes_made = True
+        
+        # Check if key_timelimit is changing
+        if update_data.key_timelimit is not None and update_data.key_timelimit != scripthub_data.get("key_timelimit"):
+            changes_made = True
+            
+        # Check if checkpoints is changing
+        if update_data.checkpoints is not None and update_data.checkpoints != scripthub_data.get("checkpoints"):
+            changes_made = True
+
+        # If no changes detected, return error
+        if not changes_made:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No changes detected. The provided values are the same as current values."
+            )
+
         # Update only provided fields
         if update_data.key_timelimit is not None:
             scripthub_data["key_timelimit"] = update_data.key_timelimit
