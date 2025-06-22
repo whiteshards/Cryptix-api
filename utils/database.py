@@ -54,6 +54,10 @@ async def create_user(username: str, password: str):
     user_doc["_id"] = result.inserted_id
     return user_doc
 
+async def get_all_customers():
+    """Get all customers for script token authentication"""
+    return await db.customers.find({}).to_list(length=None)
+
 def verify_password(password: str, hashed_password: bytes) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
 

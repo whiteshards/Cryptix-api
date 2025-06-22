@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends, status, Request
+
+from fastapi import APIRouter, HTTPException, Depends, status, Request, Header
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from utils.database import get_customer_data, update_customer_data
+from utils.database import get_customer_data, update_customer_data, get_all_customers
 from utils.scripthub import (
     create_default_customer_data, 
     create_scripthub_structure, 
@@ -14,7 +15,39 @@ from routes.auth import authenticate_token
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
 
-@router.post("/create/scripthub", response_model=ScripthubResponse)
+async def authenticate_script_token(authorization: str = Header(None)):
+    """Authenticate using script token and return user_id and scripthub_name"""
+    if not authorization:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authorization header missing"
+        )
+    
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authorization format"
+        )
+    
+    token = authorization.split(" ")[1]
+    
+    # Search through all customers to find the scripthub with this token
+    customers = await get_all_customers()
+    for customer in customers:
+        user_id = str(customer["_id"])
+        customer_data = customer.get("data", {})
+        
+        for key, value in customer_data.items():
+            if key not in ["max_scripthubs", "max_keys"]:
+                if isinstance(value, dict) and value.get("token") == token:
+                    return user_id, key
+    
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid script token"
+    )
+
+@router.post("/scripthubs", response_model=ScripthubResponse)
 @limiter.limit("10/5minutes")
 async def create_scripthub(
     request: Request, 
@@ -135,16 +168,15 @@ async def get_scripthubs(request: Request, user = Depends(authenticate_token)):
             detail="Failed to retrieve scripthubs"
         )
 
-@router.delete("/scripthub/{scripthub_name}")
+@router.delete("/scripthubs")
 @limiter.limit("10/5minutes")
 async def delete_scripthub(
-    request: Request, 
-    scripthub_name: str,
-    user = Depends(authenticate_token)
+    request: Request,
+    authorization: str = Header(None)
 ):
-    """Delete a scripthub"""
+    """Delete a scripthub using script token"""
     try:
-        user_id = str(user["_id"])
+        user_id, scripthub_name = await authenticate_script_token(authorization)
         customer_data = await get_customer_data(user_id)
 
         # Check if scripthub exists (exclude system fields)
@@ -176,17 +208,16 @@ async def delete_scripthub(
             detail="Failed to delete scripthub"
         )
 
-@router.put("/scripthub/{scripthub_name}")
+@router.put("/scripthubs")
 @limiter.limit("10/5minutes")
 async def update_scripthub(
-    request: Request, 
-    scripthub_name: str,
+    request: Request,
     update_data: ScripthubUpdate,
-    user = Depends(authenticate_token)
+    authorization: str = Header(None)
 ):
-    """Update scripthub name and time limit"""
+    """Update scripthub using script token"""
     try:
-        user_id = str(user["_id"])
+        user_id, scripthub_name = await authenticate_script_token(authorization)
         customer_data = await get_customer_data(user_id)
 
         # Check if scripthub exists (exclude system fields)
@@ -197,7 +228,7 @@ async def update_scripthub(
             )
 
         # Check if new name already exists (only if it's different from current name)
-        if update_data.new_name != scripthub_name and update_data.new_name in customer_data:
+        if update_data.new_name and update_data.new_name != scripthub_name and update_data.new_name in customer_data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Scripthub with new name already exists"
