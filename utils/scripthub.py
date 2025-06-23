@@ -29,6 +29,10 @@ def create_scripthub_structure(name: str, max_keys: int = 200, key_timelimit: in
                 "linkvertise": None,
                 "lootlabs": None
             },
+            "public_tokens": {
+                "linkvertise": generate_scripthub_token(64),
+                "lootlabs": generate_scripthub_token(64)
+            },
             "keys": {}
         }
     }
