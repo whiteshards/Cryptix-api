@@ -104,8 +104,7 @@ async def create_scripthub(
                 "maxCheckpoints": new_scripthub[scripthub_data.name]["maxCheckpoints"],
                 "checkpoints": new_scripthub[scripthub_data.name]["checkpoints"],
                 "cryptixCheckpoint": new_scripthub[scripthub_data.name]["cryptixCheckpoint"],
-                "checkpointData": new_scripthub[scripthub_data.name]["checkpointData"],
-                "public_tokens": new_scripthub[scripthub_data.name]["public_tokens"]
+                "checkpointData": new_scripthub[scripthub_data.name]["checkpointData"]
             }
         )
 
@@ -147,12 +146,8 @@ async def get_scripthubs(request: Request, user = Depends(authenticate_token)):
                     checkpoints=value.get("checkpoints", 1),
                     cryptixCheckpoint=value.get("cryptixCheckpoint", 1),
                     checkpointData=value.get("checkpointData", {
-                        "linkvertise": None,
-                        "lootlabs": None
-                    }),
-                    public_tokens=value.get("public_tokens", {
-                        "linkvertise": "",
-                        "lootlabs": ""
+                        "linkvertise": {"public_token": ""},
+                        "lootlabs": {"public_token": ""}
                     })
                 ))
 
@@ -308,12 +303,8 @@ async def update_scripthub(
                 "checkpoints": scripthub_data.get("checkpoints", 1),
                 "cryptixCheckpoint": scripthub_data.get("cryptixCheckpoint", 1),
                 "checkpointData": scripthub_data.get("checkpointData", {
-                    "linkvertise": None,
-                    "lootlabs": None
-                }),
-                "public_tokens": scripthub_data.get("public_tokens", {
-                    "linkvertise": "",
-                    "lootlabs": ""
+                    "linkvertise": {"public_token": ""},
+                    "lootlabs": {"public_token": ""}
                 })
             }
         }

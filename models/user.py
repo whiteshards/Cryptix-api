@@ -63,7 +63,6 @@ class ScripthubInfo(BaseModel):
     checkpoints: int
     cryptixCheckpoint: int
     checkpointData: dict
-    public_tokens: dict
 
 class ScripthubLimits(BaseModel):
     max_scripthubs: int

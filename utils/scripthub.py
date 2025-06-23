@@ -26,12 +26,12 @@ def create_scripthub_structure(name: str, max_keys: int = 200, key_timelimit: in
             "checkpoints": checkpoints,
             "cryptixCheckpoint": 1,
             "checkpointData": {
-                "linkvertise": None,
-                "lootlabs": None
-            },
-            "public_tokens": {
-                "linkvertise": generate_scripthub_token(64),
-                "lootlabs": generate_scripthub_token(64)
+                "linkvertise": {
+                    "public_token": generate_scripthub_token(64)
+                },
+                "lootlabs": {
+                    "public_token": generate_scripthub_token(64)
+                }
             },
             "keys": {}
         }
