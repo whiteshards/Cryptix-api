@@ -27,7 +27,6 @@ def create_scripthub_structure(name: str, max_keys: int = 200, key_timelimit: in
             "cryptixCheckpoint": 1,
             "checkpointData": {
                 "linkvertise": None,
-                "rinku": None,
                 "lootlabs": None
             },
             "keys": {}

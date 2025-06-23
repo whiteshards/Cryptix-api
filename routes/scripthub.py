@@ -147,7 +147,6 @@ async def get_scripthubs(request: Request, user = Depends(authenticate_token)):
                     cryptixCheckpoint=value.get("cryptixCheckpoint", 1),
                     checkpointData=value.get("checkpointData", {
                         "linkvertise": None,
-                        "rinku": None,
                         "lootlabs": None
                     })
                 ))
@@ -305,7 +304,6 @@ async def update_scripthub(
                 "cryptixCheckpoint": scripthub_data.get("cryptixCheckpoint", 1),
                 "checkpointData": scripthub_data.get("checkpointData", {
                     "linkvertise": None,
-                    "rinku": None,
                     "lootlabs": None
                 })
             }
